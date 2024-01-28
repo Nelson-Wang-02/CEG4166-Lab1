@@ -43,10 +43,10 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 
-/* Definitions for autoGreen */
-osThreadId_t autoGreenHandle;
-const osThreadAttr_t autoGreen_attributes = {
-  .name = "autoGreen",
+/* Definitions for autoRed */
+osThreadId_t autoRedHandle;
+const osThreadAttr_t autoRed_attributes = {
+  .name = "autoRed",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -57,17 +57,10 @@ const osThreadAttr_t autoYellow_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for autoRed */
-osThreadId_t autoRedHandle;
-const osThreadAttr_t autoRed_attributes = {
-  .name = "autoRed",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for pedGreen */
-osThreadId_t pedGreenHandle;
-const osThreadAttr_t pedGreen_attributes = {
-  .name = "pedGreen",
+/* Definitions for autoGreen */
+osThreadId_t autoGreenHandle;
+const osThreadAttr_t autoGreen_attributes = {
+  .name = "autoGreen",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -78,12 +71,19 @@ const osThreadAttr_t pedRed_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for pedGreen */
+osThreadId_t pedGreenHandle;
+const osThreadAttr_t pedGreen_attributes = {
+  .name = "pedGreen",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for buttonTask */
 osThreadId_t buttonTaskHandle;
 const osThreadAttr_t buttonTask_attributes = {
   .name = "buttonTask",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
 
@@ -93,11 +93,11 @@ const osThreadAttr_t buttonTask_attributes = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-void autoGreenStart(void *argument);
-void autoYellowStart(void *argument);
 void autoRedStart(void *argument);
-void pedGreenStart(void *argument);
+void autoYellowStart(void *argument);
+void autoGreenStart(void *argument);
 void pedRedStart(void *argument);
+void pedGreenStart(void *argument);
 void buttonStart(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -106,6 +106,10 @@ void buttonStart(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+
+
+int flag = 0;
 
 /* USER CODE END 0 */
 
@@ -162,23 +166,23 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of autoGreen */
-  autoGreenHandle = osThreadNew(autoGreenStart, NULL, &autoGreen_attributes);
+  /* creation of autoRed */
+  autoRedHandle = osThreadNew(autoRedStart, NULL, &autoRed_attributes);
 
   /* creation of autoYellow */
   autoYellowHandle = osThreadNew(autoYellowStart, NULL, &autoYellow_attributes);
 
-  /* creation of autoRed */
-  autoRedHandle = osThreadNew(autoRedStart, NULL, &autoRed_attributes);
-
-  /* creation of pedGreen */
-  pedGreenHandle = osThreadNew(pedGreenStart, NULL, &pedGreen_attributes);
+  /* creation of autoGreen */
+  autoGreenHandle = osThreadNew(autoGreenStart, NULL, &autoGreen_attributes);
 
   /* creation of pedRed */
   pedRedHandle = osThreadNew(pedRedStart, NULL, &pedRed_attributes);
 
+  /* creation of pedGreen */
+  pedGreenHandle = osThreadNew(pedGreenStart, NULL, &pedGreen_attributes);
+
   /* creation of buttonTask */
-  buttonTaskHandle = osThreadNew(buttonStart, NULL, &buttonTask_attributes);
+  buttonTaskHandle = osThreadNew(StartButtonTask, NULL, &buttonTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -199,10 +203,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //HAL_UART_Transmit(&huart2, dataTask1, 7, 1000);
-	  //HAL_Delay(1000);
-
-
   }
   /* USER CODE END 3 */
 }
@@ -312,8 +312,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -321,10 +320,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB3 PB4 PB5 PB6
-                           PB7 PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7|GPIO_PIN_8;
+  /*Configure GPIO pins : PB10 PB3 PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -338,6 +335,70 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
+/* USER CODE BEGIN Header_autoRedStart  */
+/**
+* @brief Function implementing the autoRed thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_autoRedStart  */
+void autoRedStart(void *argument) // auto red
+{
+  /* USER CODE BEGIN autoRedStart */
+  /* Infinite loop */
+  for(;;)
+  {
+    while(1){
+	  	if( HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0 ){
+	  	    break;
+	  	}
+	}
+    osDelay(3000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_3);
+    osDelay(14000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_3);
+
+  }
+  /* USER CODE END autoRedStart */
+}
+
+
+
+/* USER CODE BEGIN Header_autoYellowStart  */
+/**
+* @brief Function implementing the autoYellow thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_autoYellowStart  */
+void autoYellowStart(void *argument) //auto orange
+{
+  /* USER CODE BEGIN StartAutoYellow */
+  /* Infinite loop */
+  for(;;)
+  {
+
+    while(1){
+	  	if( HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0 ){
+	  	    break;
+	  	}
+	}
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+    osDelay(3000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+    osDelay(12000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+    osDelay(2000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+
+
+
+  }
+  /* USER CODE END autoYellowStart  */
+}
+
+
+
 /* USER CODE BEGIN Header_autoGreenStart */
 /**
   * @brief  Function implementing the autoGreen thread.
@@ -345,73 +406,26 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_autoGreenStart */
-void autoGreenStart(void *argument)
+void autoGreenStart(void *argument)  //Green Auto
 {
-  /* USER CODE BEGIN 5 */
+  /* USER CODE BEGIN autoGreenStart */
   /* Infinite loop */
   for(;;)
   {
-	  HAL_UART_Transmit(&huart2, dataTask1, sizeof(dataTask1), 1000);
-	 // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
-	  HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
-      osDelay(1000);
+
+
+	HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_4);
+    while (1){
+        if( HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)==0){
+            break;
+        }
+    }
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_4);
+    osDelay(17000);
+
 
   }
-  /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_autoYellowStart */
-/**
-* @brief Function implementing the autoYellow thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_autoYellowStart */
-void autoYellowStart(void *argument)
-{
-  /* USER CODE BEGIN autoYellowStart */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END autoYellowStart */
-}
-
-/* USER CODE BEGIN Header_autoRedStart */
-/**
-* @brief Function implementing the autoRed thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_autoRedStart */
-void autoRedStart(void *argument)
-{
-  /* USER CODE BEGIN autoRedStart */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END autoRedStart */
-}
-
-/* USER CODE BEGIN Header_pedGreenStart */
-/**
-* @brief Function implementing the pedGreen thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_pedGreenStart */
-void pedGreenStart(void *argument)
-{
-  /* USER CODE BEGIN pedGreenStart */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END pedGreenStart */
+    /* USER CODE END autoGreenStart */
 }
 
 /* USER CODE BEGIN Header_pedRedStart */
@@ -421,33 +435,75 @@ void pedGreenStart(void *argument)
 * @retval None
 */
 /* USER CODE END Header_pedRedStart */
-void pedRedStart(void *argument)
+void pedRedStart(void *argument) //pedestrain red
 {
   /* USER CODE BEGIN pedRedStart */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+    HAL_GPIO_TogglePin(GPIOB,GPO_PIN_10);
+    while(1){
+	  	if( HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0 ){
+	  	    break;
+	  	}
+	}
+    osDelay(4000);
+    HAL_GPIO_TogglePin(GPIOB,GPO_PIN_10);
+    osDelay(10000);
+
+
   }
-  /* USER CODE END pedRedStart */
+  /* USER CODE END pedRedStart  */
 }
 
-/* USER CODE BEGIN Header_buttonStart */
+/* USER CODE BEGIN Header_pedGreenStart */
 /**
-* @brief Function implementing the buttonTask thread.
+* @brief Function implementing the pedGreen thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_buttonStart */
+/* USER CODE END Header_pedGreenStart  */
+void pedGreenStart(void *argument) //pedestrain green
+{
+  /* USER CODE BEGIN pedGreenStart  */
+  /* Infinite loop */
+  for(;;)
+  {
+	while(1){
+	  	if( HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0 ){
+	  	    break;
+	  	}
+	}
+    osDelay(4000);
+    HAL_GPIO_TogglePin(GPIOB,GPO_PIN_6);
+    osDelay(10000);
+    HAL_GPIO_TogglePin(GPIOB,GPO_PIN_6);
+  }
+  /* USER CODE END pedGreenStart  */
+}
+
+/* USER CODE BEGIN Header_buttonStart  */
+/**
+* @brief Function implementing the pedGreen thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_buttonStart  */
 void buttonStart(void *argument)
 {
   /* USER CODE BEGIN buttonStart */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
-  }
-  /* USER CODE END buttonStart */
+	while(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13)){
+        uint8_t str2[] = "I got push-button\r\n";
+        HAL_UART_Transmit(&huart2, str2, sizeof(str2), 10000);
+        osDelay(17000);
+    }
+
+    }
+     /* USER CODE END buttonStart */
 }
 
 /**
