@@ -43,48 +43,35 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 
-/* Definitions for autoGreen */
-osThreadId_t autoGreenHandle;
-const osThreadAttr_t autoGreen_attributes = {
-  .name = "autoGreen",
+/* Definitions for Task1 */
+osThreadId_t Task1Handle;
+const osThreadAttr_t Task1_attributes = {
+  .name = "Task1",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for autoYellow */
-osThreadId_t autoYellowHandle;
-const osThreadAttr_t autoYellow_attributes = {
-  .name = "autoYellow",
+/* Definitions for Task2 */
+osThreadId_t Task2Handle;
+const osThreadAttr_t Task2_attributes = {
+  .name = "Task2",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for autoRed */
-osThreadId_t autoRedHandle;
-const osThreadAttr_t autoRed_attributes = {
-  .name = "autoRed",
+/* Definitions for Task3 */
+osThreadId_t Task3Handle;
+const osThreadAttr_t Task3_attributes = {
+  .name = "Task3",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for pedGreen */
-osThreadId_t pedGreenHandle;
-const osThreadAttr_t pedGreen_attributes = {
-  .name = "pedGreen",
+/* Definitions for Task4 */
+osThreadId_t Task4Handle;
+const osThreadAttr_t Task4_attributes = {
+  .name = "Task4",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for pedRed */
-osThreadId_t pedRedHandle;
-const osThreadAttr_t pedRed_attributes = {
-  .name = "pedRed",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for buttonTask */
-osThreadId_t buttonTaskHandle;
-const osThreadAttr_t buttonTask_attributes = {
-  .name = "buttonTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
-};
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -93,12 +80,10 @@ const osThreadAttr_t buttonTask_attributes = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-void autoGreenStart(void *argument);
-void autoYellowStart(void *argument);
-void autoRedStart(void *argument);
-void pedGreenStart(void *argument);
-void pedRedStart(void *argument);
-void buttonStart(void *argument);
+void StartTask1(void *argument);
+void StartTask2(void *argument);
+void StartTask3(void *argument);
+void StartTask4(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -106,6 +91,12 @@ void buttonStart(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+// uint8_t dataTask1[] = "Task1: How are you?\r\n";
+// uint8_t dataTask2[] = "Task2: I am fine and you.\r\n";
+// uint8_t dataTask3[] = "Task3: It is nice you see here, Task3\r\n";
+
+
+int flag = 0;
 
 /* USER CODE END 0 */
 
@@ -162,23 +153,17 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of autoGreen */
-  autoGreenHandle = osThreadNew(autoGreenStart, NULL, &autoGreen_attributes);
+  /* creation of Task1 */
+  Task1Handle = osThreadNew(StartTask1, NULL, &Task1_attributes);
 
-  /* creation of autoYellow */
-  autoYellowHandle = osThreadNew(autoYellowStart, NULL, &autoYellow_attributes);
+  /* creation of Task2 */
+  Task2Handle = osThreadNew(StartTask2, NULL, &Task2_attributes);
 
-  /* creation of autoRed */
-  autoRedHandle = osThreadNew(autoRedStart, NULL, &autoRed_attributes);
+  /* creation of Task3 */
+  Task3Handle = osThreadNew(StartTask3, NULL, &Task3_attributes);
 
-  /* creation of pedGreen */
-  pedGreenHandle = osThreadNew(pedGreenStart, NULL, &pedGreen_attributes);
-
-  /* creation of pedRed */
-  pedRedHandle = osThreadNew(pedRedStart, NULL, &pedRed_attributes);
-
-  /* creation of buttonTask */
-  buttonTaskHandle = osThreadNew(buttonStart, NULL, &buttonTask_attributes);
+  /* creation of Task4 */
+  Task4Handle = osThreadNew(StartTask4, NULL, &Task4_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -199,10 +184,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //HAL_UART_Transmit(&huart2, dataTask1, 7, 1000);
-	  //HAL_Delay(1000);
-
-
   }
   /* USER CODE END 3 */
 }
@@ -224,12 +205,11 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 180;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
@@ -312,8 +292,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -321,10 +300,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB3 PB4 PB5 PB6
-                           PB7 PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_7|GPIO_PIN_8;
+  /*Configure GPIO pins : PB10 PB3 PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -338,116 +315,103 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_autoGreenStart */
+/* USER CODE BEGIN Header_StartTask1 */
 /**
-  * @brief  Function implementing the autoGreen thread.
+  * @brief  Function implementing the Task1 thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_autoGreenStart */
-void autoGreenStart(void *argument)
+/* USER CODE END Header_StartTask1 */
+void StartTask1(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
   {
-	  HAL_UART_Transmit(&huart2, dataTask1, sizeof(dataTask1), 1000);
-	 // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
-	  HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
-      osDelay(1000);
+    // Phase 1
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_3); //red LED
+    osDelay(12000); 
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_3);
+    osDelay(13000); 
+
 
   }
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_autoYellowStart */
+/* USER CODE BEGIN Header_StartTask2 */
 /**
-* @brief Function implementing the autoYellow thread.
+* @brief Function implementing the Task2 thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_autoYellowStart */
-void autoYellowStart(void *argument)
+/* USER CODE END Header_StartTask2 */
+void StartTask2(void *argument)
 {
-  /* USER CODE BEGIN autoYellowStart */
+  /* USER CODE BEGIN StartTask2 */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+    osDelay(10000); //Phase 1
+	  HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);//Orange LED
+	  osDelay(2000); //Phase 2
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+    osDelay(10000); //Phase 3
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+    osDelay(3000); // Phase 4
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_5);
+
+    
+
+
   }
-  /* USER CODE END autoYellowStart */
+  /* USER CODE END StartTask2 */
 }
 
-/* USER CODE BEGIN Header_autoRedStart */
+/* USER CODE BEGIN Header_StartTask3 */
 /**
-* @brief Function implementing the autoRed thread.
+* @brief Function implementing the Task3 thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_autoRedStart */
-void autoRedStart(void *argument)
+/* USER CODE END Header_StartTask3 */
+void StartTask3(void *argument)
 {
-  /* USER CODE BEGIN autoRedStart */
+  /* USER CODE BEGIN StartTask3 */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    // Phase 3
+    osDelay(12000);
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_4); //Green LED
+    osDelay(10000);
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_4);
+    osDelay(3000);
+
   }
-  /* USER CODE END autoRedStart */
+  /* USER CODE END StartTask3 */
 }
 
-/* USER CODE BEGIN Header_pedGreenStart */
+/* USER CODE BEGIN Header_StartTask4 */
 /**
-* @brief Function implementing the pedGreen thread.
+* @brief Function implementing the Task4 thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_pedGreenStart */
-void pedGreenStart(void *argument)
+/* USER CODE END Header_StartTask4 */
+void StartTask4(void *argument)
 {
-  /* USER CODE BEGIN pedGreenStart */
+  /* USER CODE BEGIN StartTask4 */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
-  }
-  /* USER CODE END pedGreenStart */
-}
+    osDelay(25000);
+	  uint8_t dataTask4[] = "Task 4: Traffic Light iteration completed.\r\n";
 
-/* USER CODE BEGIN Header_pedRedStart */
-/**
-* @brief Function implementing the pedRed thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_pedRedStart */
-void pedRedStart(void *argument)
-{
-  /* USER CODE BEGIN pedRedStart */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
+	  HAL_UART_Transmit(&huart2, dataTask4, sizeof(dataTask4), 1000);
   }
-  /* USER CODE END pedRedStart */
-}
-
-/* USER CODE BEGIN Header_buttonStart */
-/**
-* @brief Function implementing the buttonTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_buttonStart */
-void buttonStart(void *argument)
-{
-  /* USER CODE BEGIN buttonStart */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END buttonStart */
+  /* USER CODE END StartTask4 */
 }
 
 /**
