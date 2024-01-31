@@ -499,6 +499,14 @@ void startPedGreen(void *argument)
   {
 	  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9, GPIO_PIN_RESET); // Initial State.
 
+	  osSemaphoreAcquire(binarySemPedGreenHandle, osWaitForever);
+
+	  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_9, GPIO_PIN_SET);
+
+	  osDelay(10000);
+
+	  osSemaphoreRelease(binarySemPedRedHandle);
+
 
   }
   /* USER CODE END startPedGreen */

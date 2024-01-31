@@ -64,8 +64,8 @@ all: main-build
 main-build: getStartLab1.elf secondary-outputs
 
 # Tool invocations
-getStartLab1.elf getStartLab1.map: $(OBJS) $(USER_OBJS) C:\Users\rjtan\Documents\CEG4166\CEG4166-Lab1\getStartLab1\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "getStartLab1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\rjtan\Documents\CEG4166\CEG4166-Lab1\getStartLab1\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="getStartLab1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+getStartLab1.elf getStartLab1.map: $(OBJS) $(USER_OBJS) C:\ST\CEG-4166\CEG4166-Lab1\getStartLab1\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "getStartLab1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\ST\CEG-4166\CEG4166-Lab1\getStartLab1\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="getStartLab1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
