@@ -410,7 +410,20 @@ void StartAutoYellow(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  osSemaphoreAcquire(binarySemAutoYellowHandle, osWaitForever);
+	  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5, GPIO_PIN_SET);
+
+	  osDelay(3000);
+
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET); // initial state.
+	  osSemaphoreRelease(binarySemAutoRedHandle);
+
+	  osSemaphoreAcquire(binarySemAutoYellowHandle, osWaitForever);
+	  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_5, GPIO_PIN_SET);
+
+	  osDelay(2000);
+
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 
   }
   /* USER CODE END StartAutoYellow */
@@ -429,7 +442,15 @@ void StartAutoRed(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  osSemaphoreAcquire(binarySemAutoRedHandle, osWaitForever);
+	  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_4, GPIO_PIN_SET);
+
+	  osDelay(12000);
+	  osSemaphoreRelease(binarySemAutoYellowHandle);
+
+	  osDelay(2000);
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
+	  osSemaphoreRelease(binarySemAutoGreenHandle);
 
 
   }
